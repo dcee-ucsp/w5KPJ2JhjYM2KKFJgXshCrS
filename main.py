@@ -104,7 +104,21 @@ if df_filtrado is not None:
         correos_seleccionados = df_copia[df_copia['correo']]['Correo'].tolist()
         st.session_state.correos_guardados = correos_seleccionados
     
-    correos_guardados = st.session_state.get("correos_guardados", [])
+    
+
     if correos_guardados:
         st.subheader("Correos de cursos seleccionados")
-        st.text_area("\n".join(correos_guardados))
+        correos_texto = ", ".join(correos_guardados)
+        
+        texto_area = st.text_area("", value=correos_texto, height=100, key="correos_area")
+        
+        if st.button("Copiar correos"):
+            # Usar JavaScript para copiar el texto al portapapeles
+            js = f"""
+            <script>
+            navigator.clipboard.writeText("{correos_texto}");
+            alert("¡Correos copiados al portapapeles!");
+            </script>
+            """
+            st.components.v1.html(js, height=0)
+            st.success("¡Correos copiados!")
