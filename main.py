@@ -4,13 +4,6 @@ from datetime import datetime, time
 
 st.title("Coincidencias de horarios")
 
-# Inicializar el DataFrame en session_state si no existe
-if 'df_filtrado' not in st.session_state:
-    st.session_state.df_filtrado = None
-
-if 'selecciones_correo' not in st.session_state:
-    st.session_state.selecciones_correo = {}
-
 col1, col2 = st.columns(2)
 with col1:
     file_path = "source/plantilla_cursos.xlsx"
@@ -87,26 +80,13 @@ if df_cursos is not None:
         
         # Guardar el resultado filtrado en el session_state
         st.session_state.df_filtrado = df_resultado
-        
-        # Reiniciar las selecciones de correo cuando se aplican nuevos filtros
-        st.session_state.selecciones_correo = {}
 
 df_filtrado = st.session_state.get('df_filtrado', None)
 
 if df_filtrado is not None:
     df_copia = df_filtrado.copy()
 
-    # Crear columna 'correo' y establecer valores iniciales
     df_copia['correo'] = False
-    
-    # Identificar cada fila con una clave única
-    df_copia['id_unico'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
-    
-    # Aplicar selecciones guardadas anteriormente
-    for idx, row in df_copia.iterrows():
-        if row['id_unico'] in st.session_state.selecciones_correo:
-            df_copia.at[idx, 'correo'] = st.session_state.selecciones_correo[row['id_unico']]
-    
     df_copia['Curso y grupo'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
     df_copia['Docente'] = df_copia['Docente']
     df_copia['Correo'] = df_copia['Correo']
@@ -115,11 +95,10 @@ if df_filtrado is not None:
     df_copia['Inicia'] = df_copia['Inicia']
     df_copia['Fin'] = df_copia['Fin']
 
-    df_mostrar = df_copia[['correo', 'Curso y grupo', 'Docente', 'Correo', 'Rango horas', 'Día', 'Inicia', 'Fin']]
+    df_copia = df_copia[['correo', 'Curso y grupo', 'Docente', 'Correo', 'Rango horas', 'Día', 'Inicia', 'Fin']]
 
-    # Usar data_editor y almacenar el resultado
-    df_editado = st.data_editor(
-        df_mostrar,
+    st.data_editor(
+        df_copia,
         column_config={
             "correo": st.column_config.CheckboxColumn(
                 "Correo",
@@ -129,41 +108,10 @@ if df_filtrado is not None:
         },
         disabled=["widgets"],
         hide_index=True,
-        key="data_editor" + str(int(datetime.now().timestamp()))  # Clave única
     )
-    
-    # Verificar si hay cambios y actualizar las selecciones
-    if df_editado is not None:
-        # Detectar cambios comparando con valores antiguos
-        cambios_detectados = False
-        for idx, row in df_editado.iterrows():
-            curso_grupo = df_copia.loc[idx, 'id_unico']
-            if curso_grupo in st.session_state.selecciones_correo:
-                if st.session_state.selecciones_correo[curso_grupo] != row['correo']:
-                    cambios_detectados = True
-            elif row['correo']:  # Nuevo valor seleccionado
-                cambios_detectados = True
-                
-            # Actualizar el valor en el diccionario
-            st.session_state.selecciones_correo[curso_grupo] = row['correo']
-        
-        # Si se detectaron cambios, forzar rerun (de manera segura)
-        if cambios_detectados and st.button("Actualizar selecciones", key="actualizar_selecciones"):
-            st.experimental_rerun()
-
-    # Botón adicional para actualizar manualmente
-    if st.button("Aplicar selecciones", key="aplicar_selecciones"):
-        pass  # Solo para forzar la recarga
 
     # Visualizar el DataFrame de seleccionados
-    seleccionados = df_editado[df_editado['correo'] == True]
+    seleccionados = df_copia[df_copia['correo'] == True]
     if not seleccionados.empty:
         st.write("Cursos seleccionados para enviar correo:")
         st.dataframe(seleccionados)
-        
-        # Extraer y mostrar solo los correos en un recuadro
-        correos_seleccionados = seleccionados['Correo'].tolist()
-        correos_texto = '; '.join(correos_seleccionados)
-        
-        st.subheader("Correos de los cursos seleccionados")
-        st.text_area("Copia estos correos", correos_texto, height=100)
