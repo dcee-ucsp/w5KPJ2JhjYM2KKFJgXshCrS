@@ -109,3 +109,19 @@ if df_filtrado is not None:
         disabled=["widgets"],
         hide_index=True,
     )
+
+seleccionados = df_copia[df_copia['correo'] == True]
+
+if not seleccionados.empty:
+    docentes = seleccionados['Docente'].tolist()
+
+    mensaje = st.text_area(
+        "Editar mensaje de invitación",
+        value="Estimados,\n\nNos gustaría invitar a sus estudiantes a participar en nuestro próximo evento. Esperamos contar con tu participación para hacer de este evento una experiencia enriquecedora.\n\nSaludos cordiales",
+        height=200
+    )
+
+    nombres = ", ".join(docentes)
+
+    st.text_area("Correos de los docentes seleccionados", value=nombres, height=100)
+
