@@ -110,8 +110,29 @@ if df_filtrado is not None:
         hide_index=True,
     )
 
-    # Visualizar el DataFrame de seleccionados
     seleccionados = df_copia[df_copia['correo'] == True]
     if not seleccionados.empty:
         st.write("Cursos seleccionados para enviar correo:")
         st.dataframe(seleccionados)
+        
+        # Extraer correos
+        correos_seleccionados = seleccionados['Correo'].tolist()
+        correos_texto = '; '.join(correos_seleccionados)
+        
+        # Crear plantilla de correo
+        st.subheader("Plantilla de correo")
+        
+        asunto_correo = st.text_input("Asunto del correo", "Información importante sobre el curso")
+        cuerpo_correo = st.text_area("Cuerpo del correo", 
+                                     "Estimado(a) docente,\n\nMe dirijo a usted para informarle...\n\nAgradezco su atención.\n\nSaludos cordiales.", 
+                                     height=200)
+        
+        # Mostrar la plantilla completa
+        st.subheader("Correo listo para enviar")
+        st.text_area("Para", correos_texto, height=100)
+        st.text_input("Asunto", asunto_correo, disabled=True)
+        st.text_area("Mensaje", cuerpo_correo, height=200, disabled=True)
+        
+        # Link para abrir en el cliente de correo predeterminado
+        mailto_link = f"mailto:{correos_texto}?subject={asunto_correo}&body={cuerpo_correo.replace('\n', '%0D%0A')}"
+        st.markdown(f"[Abrir en cliente de correo]({mailto_link})")
