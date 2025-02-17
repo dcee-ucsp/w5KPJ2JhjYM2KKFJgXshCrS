@@ -11,13 +11,6 @@ if 'df_filtrado' not in st.session_state:
 if 'selecciones_correo' not in st.session_state:
     st.session_state.selecciones_correo = {}
 
-if 'cambios_pendientes' not in st.session_state:
-    st.session_state.cambios_pendientes = False
-
-# Función para manejar cambios en los checkboxes
-def actualizar_seleccion(cambio):
-    st.session_state.cambios_pendientes = True
-    
 col1, col2 = st.columns(2)
 with col1:
     file_path = "source/plantilla_cursos.xlsx"
@@ -106,7 +99,7 @@ if df_filtrado is not None:
     # Crear columna 'correo' y establecer valores iniciales
     df_copia['correo'] = False
     
-    # Identificar cada fila con una clave única (usando combinación de Materia y Grupo)
+    # Identificar cada fila con una clave única
     df_copia['id_unico'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
     
     # Aplicar selecciones guardadas anteriormente
@@ -124,8 +117,8 @@ if df_filtrado is not None:
 
     df_mostrar = df_copia[['correo', 'Curso y grupo', 'Docente', 'Correo', 'Rango horas', 'Día', 'Inicia', 'Fin']]
 
-    # Configuración del data_editor con manejo especial
-    edited_df = st.data_editor(
+    # Usar data_editor y almacenar el resultado
+    df_editado = st.data_editor(
         df_mostrar,
         column_config={
             "correo": st.column_config.CheckboxColumn(
@@ -136,20 +129,34 @@ if df_filtrado is not None:
         },
         disabled=["widgets"],
         hide_index=True,
-        key="data_editor",
-        on_change=actualizar_seleccion,
+        key="data_editor" + str(int(datetime.now().timestamp()))  # Clave única
     )
     
-    if st.session_state.cambios_pendientes:
-        for idx, row in edited_df.iterrows():
+    # Verificar si hay cambios y actualizar las selecciones
+    if df_editado is not None:
+        # Detectar cambios comparando con valores antiguos
+        cambios_detectados = False
+        for idx, row in df_editado.iterrows():
             curso_grupo = df_copia.loc[idx, 'id_unico']
+            if curso_grupo in st.session_state.selecciones_correo:
+                if st.session_state.selecciones_correo[curso_grupo] != row['correo']:
+                    cambios_detectados = True
+            elif row['correo']:  # Nuevo valor seleccionado
+                cambios_detectados = True
+                
+            # Actualizar el valor en el diccionario
             st.session_state.selecciones_correo[curso_grupo] = row['correo']
-        st.session_state.cambios_pendientes = False
-        # Forzar la rerunning del script
-        st.rerun()
+        
+        # Si se detectaron cambios, forzar rerun (de manera segura)
+        if cambios_detectados and st.button("Actualizar selecciones", key="actualizar_selecciones"):
+            st.experimental_rerun()
+
+    # Botón adicional para actualizar manualmente
+    if st.button("Aplicar selecciones", key="aplicar_selecciones"):
+        pass  # Solo para forzar la recarga
 
     # Visualizar el DataFrame de seleccionados
-    seleccionados = edited_df[edited_df['correo'] == True]
+    seleccionados = df_editado[df_editado['correo'] == True]
     if not seleccionados.empty:
         st.write("Cursos seleccionados para enviar correo:")
         st.dataframe(seleccionados)
