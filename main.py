@@ -66,8 +66,8 @@ def aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados):
 if df is not None:
     st.title("Filtro de Horarios")
     dias_seleccionados = st.multiselect("Selecciona los días", ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
-    hora_inicio = st.slider("Hora de inicio", 0, 7)
-    hora_fin = st.slider("Hora de fin", 0, 22)
+    hora_inicio = st.slider("Hora de inicio", 7, 22)
+    hora_fin = st.slider("Hora de fin", 7, 22)
 
     if st.button("Filtrar Horarios"):
         df_resultado = aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados)
