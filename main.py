@@ -100,25 +100,15 @@ if df_filtrado is not None:
         hide_index=True,
     )
     
-    if st.button("Guardar"):
-        correos_seleccionados = df_copia[df_copia['correo']]['Correo'].tolist()
-        st.session_state.correos_guardados = correos_seleccionados
+if st.button("Guardar"):
+    correos_seleccionados = df_copia[df_copia['correo']]['Correo'].tolist()    
+    if "correos_guardados" not in st.session_state:
+        st.session_state.correos_guardados = []
     
-    
+    st.session_state.correos_guardados = correos_seleccionados
 
-    if correos_guardados:
-        st.subheader("Correos de cursos seleccionados")
-        correos_texto = ", ".join(correos_guardados)
-        
-        texto_area = st.text_area("", value=correos_texto, height=100, key="correos_area")
-        
-        if st.button("Copiar correos"):
-            # Usar JavaScript para copiar el texto al portapapeles
-            js = f"""
-            <script>
-            navigator.clipboard.writeText("{correos_texto}");
-            alert("¡Correos copiados al portapapeles!");
-            </script>
-            """
-            st.components.v1.html(js, height=0)
-            st.success("¡Correos copiados!")
+if "correos_guardados" in st.session_state and st.session_state.correos_guardados:
+    st.subheader("Correos de cursos seleccionados")
+    
+    correos_texto = ", ".join(st.session_state.correos_guardados)
+    st.text_area("", value=correos_texto, height=100, key="correos_area")
