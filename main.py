@@ -11,6 +11,13 @@ if 'df_filtrado' not in st.session_state:
 if 'selecciones_correo' not in st.session_state:
     st.session_state.selecciones_correo = {}
 
+if 'cambios_pendientes' not in st.session_state:
+    st.session_state.cambios_pendientes = False
+
+# Función para manejar cambios en los checkboxes
+def actualizar_seleccion(cambio):
+    st.session_state.cambios_pendientes = True
+    
 col1, col2 = st.columns(2)
 with col1:
     file_path = "source/plantilla_cursos.xlsx"
@@ -117,8 +124,8 @@ if df_filtrado is not None:
 
     df_mostrar = df_copia[['correo', 'Curso y grupo', 'Docente', 'Correo', 'Rango horas', 'Día', 'Inicia', 'Fin']]
 
-    # Usar data_editor y guardar los cambios
-    df_editado = st.data_editor(
+    # Configuración del data_editor con manejo especial
+    edited_df = st.data_editor(
         df_mostrar,
         column_config={
             "correo": st.column_config.CheckboxColumn(
@@ -129,18 +136,25 @@ if df_filtrado is not None:
         },
         disabled=["widgets"],
         hide_index=True,
-        key="data_editor"
+        key="data_editor",
+        on_change=actualizar_seleccion,
     )
     
-    for idx, row in df_editado.iterrows():
-        curso_grupo = df_copia.loc[idx, 'id_unico']
-        st.session_state.selecciones_correo[curso_grupo] = row['correo']
+    if st.session_state.cambios_pendientes:
+        for idx, row in edited_df.iterrows():
+            curso_grupo = df_copia.loc[idx, 'id_unico']
+            st.session_state.selecciones_correo[curso_grupo] = row['correo']
+        st.session_state.cambios_pendientes = False
+        # Forzar la rerunning del script
+        st.rerun()
 
-    seleccionados = df_editado[df_editado['correo'] == True]
+    # Visualizar el DataFrame de seleccionados
+    seleccionados = edited_df[edited_df['correo'] == True]
     if not seleccionados.empty:
         st.write("Cursos seleccionados para enviar correo:")
         st.dataframe(seleccionados)
         
+        # Extraer y mostrar solo los correos en un recuadro
         correos_seleccionados = seleccionados['Correo'].tolist()
         correos_texto = '; '.join(correos_seleccionados)
         
