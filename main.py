@@ -73,7 +73,7 @@ if df_cursos is not None:
     hora_inicio = st.slider("Hora de inicio", 7, 22)
     hora_fin = st.slider("Hora de fin", 7, 22)
     
-    tipo_seleccionado = st.multiselect("Selecciona el tipo", ["Matemáticas", "Humanidades", "DCEE"], default=["Matemáticas", "Humanidades", "DCEE"])
+    tipo_seleccionado = st.multiselect("Selecciona el tipo", ["Matemáticas", "Humanidades", "DCEE"], default=["DCEE"])
 
     if st.button("Filtrar Horarios"):
         df_resultado = aplicar_filtro(df_cursos, hora_inicio, hora_fin, dias_seleccionados, tipo_seleccionado)
