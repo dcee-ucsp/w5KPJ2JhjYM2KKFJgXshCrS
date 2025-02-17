@@ -26,3 +26,6 @@ if uploaded_file:
             df = pd.read_excel(uploaded_file)
         elif uploaded_file.name.endswith(".csv"):
             df = pd.read_csv(uploaded_file)
+
+    except Exception as e:
+        st.error(f"Error al procesar el archivo: {e}")
