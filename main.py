@@ -70,9 +70,9 @@ if df is not None:
 
     # Widgets para selección de horario
     dias_opciones = df["Dia"].unique().tolist()
-    dias_seleccionados = st.multiselect("Selecciona los días", dias_opciones, default=dias_opciones)
-    hora_inicio = st.slider("Hora de inicio", 0, 23, 8)
-    hora_fin = st.slider("Hora de fin", 0, 23, 18)
+    dias_seleccionados = st.multiselect("Selecciona los días", dias_opciones)
+    hora_inicio = st.slider("Hora de inicio", 7, 22)
+    hora_fin = st.slider("Hora de fin", 7, 22)
 
     # Aplicar filtro y mostrar resultados
     if st.button("Filtrar Horarios"):
