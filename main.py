@@ -4,6 +4,13 @@ from datetime import datetime, time
 
 st.title("Coincidencias de horarios")
 
+# Inicializar el DataFrame en session_state si no existe
+if 'df_filtrado' not in st.session_state:
+    st.session_state.df_filtrado = None
+
+if 'selecciones_correo' not in st.session_state:
+    st.session_state.selecciones_correo = {}
+
 col1, col2 = st.columns(2)
 with col1:
     file_path = "source/plantilla_cursos.xlsx"
@@ -80,13 +87,26 @@ if df_cursos is not None:
         
         # Guardar el resultado filtrado en el session_state
         st.session_state.df_filtrado = df_resultado
+        
+        # Reiniciar las selecciones de correo cuando se aplican nuevos filtros
+        st.session_state.selecciones_correo = {}
 
 df_filtrado = st.session_state.get('df_filtrado', None)
 
 if df_filtrado is not None:
     df_copia = df_filtrado.copy()
 
+    # Crear columna 'correo' y establecer valores iniciales
     df_copia['correo'] = False
+    
+    # Identificar cada fila con una clave única (usando combinación de Materia y Grupo)
+    df_copia['id_unico'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
+    
+    # Aplicar selecciones guardadas anteriormente
+    for idx, row in df_copia.iterrows():
+        if row['id_unico'] in st.session_state.selecciones_correo:
+            df_copia.at[idx, 'correo'] = st.session_state.selecciones_correo[row['id_unico']]
+    
     df_copia['Curso y grupo'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
     df_copia['Docente'] = df_copia['Docente']
     df_copia['Correo'] = df_copia['Correo']
@@ -95,10 +115,11 @@ if df_filtrado is not None:
     df_copia['Inicia'] = df_copia['Inicia']
     df_copia['Fin'] = df_copia['Fin']
 
-    df_copia = df_copia[['correo', 'Curso y grupo', 'Docente', 'Correo', 'Rango horas', 'Día', 'Inicia', 'Fin']]
+    df_mostrar = df_copia[['correo', 'Curso y grupo', 'Docente', 'Correo', 'Rango horas', 'Día', 'Inicia', 'Fin']]
 
-    st.data_editor(
-        df_copia,
+    # Usar data_editor y guardar los cambios
+    df_editado = st.data_editor(
+        df_mostrar,
         column_config={
             "correo": st.column_config.CheckboxColumn(
                 "Correo",
@@ -108,31 +129,20 @@ if df_filtrado is not None:
         },
         disabled=["widgets"],
         hide_index=True,
+        key="data_editor"
     )
+    
+    for idx, row in df_editado.iterrows():
+        curso_grupo = df_copia.loc[idx, 'id_unico']
+        st.session_state.selecciones_correo[curso_grupo] = row['correo']
 
-    seleccionados = df_copia[df_copia['correo'] == True]
+    seleccionados = df_editado[df_editado['correo'] == True]
     if not seleccionados.empty:
         st.write("Cursos seleccionados para enviar correo:")
         st.dataframe(seleccionados)
         
-        # Extraer correos
         correos_seleccionados = seleccionados['Correo'].tolist()
         correos_texto = '; '.join(correos_seleccionados)
         
-        # Crear plantilla de correo
-        st.subheader("Plantilla de correo")
-        
-        asunto_correo = st.text_input("Asunto del correo", "Información importante sobre el curso")
-        cuerpo_correo = st.text_area("Cuerpo del correo", 
-                                     "Estimado(a) docente,\n\nMe dirijo a usted para informarle...\n\nAgradezco su atención.\n\nSaludos cordiales.", 
-                                     height=200)
-        
-        # Mostrar la plantilla completa
-        st.subheader("Correo listo para enviar")
-        st.text_area("Para", correos_texto, height=100)
-        st.text_input("Asunto", asunto_correo, disabled=True)
-        st.text_area("Mensaje", cuerpo_correo, height=200, disabled=True)
-        
-        # Link para abrir en el cliente de correo predeterminado
-        mailto_link = f"mailto:{correos_texto}?subject={asunto_correo}&body={cuerpo_correo.replace('\n', '%0D%0A')}"
-        st.markdown(f"[Abrir en cliente de correo]({mailto_link})")
+        st.subheader("Correos de los cursos seleccionados")
+        st.text_area("Copia estos correos", correos_texto, height=100)
