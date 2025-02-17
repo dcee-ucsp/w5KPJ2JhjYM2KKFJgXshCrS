@@ -29,3 +29,44 @@ if uploaded_file:
 
     except Exception as e:
         st.error(f"Error al procesar el archivo: {e}")
+        
+
+def convertir_hora(hora):
+    try:
+        return datetime.strptime(hora, "%I:%M %p").time()
+    except ValueError:
+        return datetime.strptime(hora, "%H:%M").time()
+
+def superposicion_horas(inicio_clase, fin_clase, inicio_filtro, fin_filtro):
+    return not (fin_clase < inicio_filtro or inicio_clase > fin_filtro)
+
+def dentro_del_rango(inicio_clase, fin_clase, inicio_filtro, fin_filtro):
+    return inicio_clase >= inicio_filtro and fin_clase <= fin_filtro
+
+def aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados):
+    df['Inicia'] = df['Inicia'].apply(convertir_hora)
+    df['Fin'] = df['Fin'].apply(convertir_hora)
+    
+    hora_inicio = time(hora_inicio, 0)
+    hora_fin = time(hora_fin, 0)
+    
+    df['Rango horas'] = df.apply(lambda row: 'Dentro del rango' if dentro_del_rango(row['Inicia'], row['Fin'], hora_inicio, hora_fin) else 'Fuera del rango', axis=1)
+    df_filtrado = df[(df['Dia'].isin(dias_seleccionados)) &
+                      (df.apply(lambda row: superposicion_horas(row['Inicia'], row['Fin'], hora_inicio, hora_fin), axis=1))]
+    df_filtrado = df_filtrado.sort_values(by=['Rango horas'])
+    df_filtrado['Curso y grupo'] = df_filtrado['Materia'] + ' - ' + df_filtrado['Grupo']
+    return df_filtrado
+
+# Configuración de Streamlit
+st.title("Filtro de Horarios de Clases")
+
+# Widgets para selección de horario
+dias_opciones = df["Dia"].unique().tolist()
+dias_seleccionados = st.multiselect("Selecciona los días", dias_opciones, default=dias_opciones)
+hora_inicio = st.slider("Hora de inicio", 0, 23, 8)
+hora_fin = st.slider("Hora de fin", 0, 23, 18)
+
+# Aplicar filtro y mostrar resultados
+if st.button("Filtrar Horarios"):
+    df_resultado = aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados)
+    st.write(df_resultado)
