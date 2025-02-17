@@ -20,7 +20,7 @@ with col1:
 with col2:
     uploaded_file = st.file_uploader("Subir base de cursos", type=["xlsx", "csv"])
 
-df = None
+df_cursos = None  # Aseguramos que df_cursos se inicialice correctamente
 
 if uploaded_file:
     try:
@@ -110,5 +110,8 @@ if df_filtrado is not None:
         hide_index=True,
     )
 
-seleccionados = df_copia[df_copia['correo'] == True]
-
+    # Visualizar el DataFrame de seleccionados
+    seleccionados = df_copia[df_copia['correo'] == True]
+    if not seleccionados.empty:
+        st.write("Cursos seleccionados para enviar correo:")
+        st.dataframe(seleccionados)
