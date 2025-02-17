@@ -75,11 +75,12 @@ if df_cursos is not None:
     
     tipo_seleccionado = st.multiselect("Selecciona el tipo", ["Matemáticas", "Humanidades", "DCEE"], default=["DCEE"])
 
-    if st.button("Filtrar Horarios"):
-        df_resultado = aplicar_filtro(df_cursos, hora_inicio, hora_fin, dias_seleccionados, tipo_seleccionado)
-        
-        # Guardar el resultado filtrado en el session_state
-        st.session_state.df_filtrado = df_resultado
+    
+    boton_desactivado = not (hora_inicio and hora_fin and dias_seleccionados and tipo_seleccionado)
+    
+if st.button("Filtrar Horarios", disabled=boton_desactivado):
+    df_resultado = aplicar_filtro(df_cursos, hora_inicio, hora_fin, dias_seleccionados, tipo_seleccionado)
+    st.session_state.df_filtrado = df_resultado
 
 df_filtrado = st.session_state.get('df_filtrado', None)
 
