@@ -29,6 +29,13 @@ if uploaded_file:
             df = pd.read_excel(uploaded_file)
         elif uploaded_file.name.endswith(".csv"):
             df = pd.read_csv(uploaded_file)
+
+        # Verificar si las columnas del archivo son las correctas
+        expected_columns = ['Materia', 'Grupo', 'Docente', 'Dia', 'Inicia', 'Fin']
+        if not all(col in df.columns for col in expected_columns):
+            st.error("El archivo cargado no tiene las columnas requeridas. Por favor, sube el archivo con la plantilla adecuada.")
+            df = None  # Reiniciar df para no permitir continuar
+
     except Exception as e:
         st.error(f"Error al procesar el archivo: {e}")
 
