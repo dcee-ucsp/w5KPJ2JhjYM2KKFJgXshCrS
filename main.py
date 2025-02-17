@@ -64,13 +64,10 @@ def aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados):
     return df_filtrado
 
 if df is not None:
-    st.title("Filtro de Horarios de Clases")
-
-    # Widgets para selección de horario
-    dias_opciones = df["Dia"].unique().tolist()
-    dias_seleccionados = st.multiselect("Selecciona los días", dias_opciones, default=dias_opciones)
-    hora_inicio = st.slider("Hora de inicio", 0, 23, 8)
-    hora_fin = st.slider("Hora de fin", 0, 23, 18)
+    st.title("Filtro de Horarios")
+    dias_seleccionados = st.multiselect("Selecciona los días", dias_opciones)
+    hora_inicio = st.slider("Hora de inicio", 0, 7)
+    hora_fin = st.slider("Hora de fin", 0, 22)
 
     if st.button("Filtrar Horarios"):
         df_resultado = aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados)
@@ -86,13 +83,12 @@ if df is not None:
 
         df_copia = df_copia[['correo', 'Curso y grupo', 'Docente', 'Rango horas', 'Día', 'Inicia', 'Fin']]
 
-        # Mostrar el DataFrame utilizando st.data_editor
         st.data_editor(
             df_copia,
             column_config={
                 "correo": st.column_config.CheckboxColumn(
                     "Correo",
-                    help="Marcar quiere mandarle un correo",
+                    help="Seleccionar para plantilla de correos",
                     default=False,
                 )
             },
