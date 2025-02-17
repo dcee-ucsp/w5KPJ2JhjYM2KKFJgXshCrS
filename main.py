@@ -9,7 +9,7 @@ with col1:
     file_path = "source/plantilla_cursos.xlsx"
     with open(file_path, "rb") as file:
         file_bytes = file.read()
-    
+
     st.download_button(
         label="Descargar plantilla de base de cursos",
         data=file_bytes,
@@ -71,27 +71,35 @@ if df is not None:
 
     if st.button("Filtrar Horarios"):
         df_resultado = aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados)
-        df_copia = df_resultado.copy()
+        
+        # Guardar el resultado filtrado en el session_state
+        st.session_state.df_filtrado = df_resultado
 
-        df_copia['correo'] = False
-        df_copia['Curso y grupo'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
-        df_copia['Docente'] = df_copia['Docente']
-        df_copia['Rango horas'] = df_copia['Rango horas']
-        df_copia['Día'] = df_copia['Dia']
-        df_copia['Inicia'] = df_copia['Inicia']
-        df_copia['Fin'] = df_copia['Fin']
+# Recuperar el dataframe filtrado desde el session_state si existe
+df_filtrado = st.session_state.get('df_filtrado', None)
 
-        df_copia = df_copia[['correo', 'Curso y grupo', 'Docente', 'Rango horas', 'Día', 'Inicia', 'Fin']]
+if df_filtrado is not None:
+    df_copia = df_filtrado.copy()
 
-        st.data_editor(
-            df_copia,
-            column_config={
-                "correo": st.column_config.CheckboxColumn(
-                    "Correo",
-                    help="Seleccionar para plantilla de correos",
-                    default=False,
-                )
-            },
-            disabled=["widgets"],
-            hide_index=True,
-        )
+    df_copia['correo'] = False
+    df_copia['Curso y grupo'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
+    df_copia['Docente'] = df_copia['Docente']
+    df_copia['Rango horas'] = df_copia['Rango horas']
+    df_copia['Día'] = df_copia['Dia']
+    df_copia['Inicia'] = df_copia['Inicia']
+    df_copia['Fin'] = df_copia['Fin']
+
+    df_copia = df_copia[['correo', 'Curso y grupo', 'Docente', 'Rango horas', 'Día', 'Inicia', 'Fin']]
+
+    st.data_editor(
+        df_copia,
+        column_config={
+            "correo": st.column_config.CheckboxColumn(
+                "Correo",
+                help="Seleccionar para plantilla de correos",
+                default=False,
+            )
+        },
+        disabled=["widgets"],
+        hide_index=True,
+    )
