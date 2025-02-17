@@ -25,14 +25,17 @@ df = None
 if uploaded_file:
     try:
         if uploaded_file.name.endswith(".xlsx"):
-            df = pd.read_excel(uploaded_file)
+            df_cursos = pd.read_excel(uploaded_file, sheet_name="Cursos")
+            df_etiquetas = pd.read_excel(uploaded_file, sheet_name="Etiquetas")
         elif uploaded_file.name.endswith(".csv"):
-            df = pd.read_csv(uploaded_file)
-
-        expected_columns = ['Materia', 'Grupo', 'Docente', 'Dia', 'Inicia', 'Fin']
-        if not all(col in df.columns for col in expected_columns):
-            st.error("El archivo cargado no tiene las columnas requeridas. Por favor, sube el archivo con la plantilla adecuada.")
-            df = None  # Reiniciar df para no permitir continuar
+            df_cursos = pd.read_csv(uploaded_file)
+            df_etiquetas = pd.DataFrame()  # Si es CSV, no hay hojas adicionales
+        
+        # Verifica las columnas esperadas
+        expected_columns = ['Materia', 'Grupo', 'Docente', 'Dia', 'Inicia', 'Fin', 'Tipo']
+        if not all(col in df_cursos.columns for col in expected_columns):
+            st.error("El archivo cargado no tiene las columnas requeridas en la hoja de cursos. Por favor, sube el archivo con la plantilla adecuada.")
+            df_cursos = None  # Reiniciar df para no permitir continuar
 
     except Exception as e:
         st.error(f"Error al procesar el archivo: {e}")
@@ -49,7 +52,7 @@ def superposicion_horas(inicio_clase, fin_clase, inicio_filtro, fin_filtro):
 def dentro_del_rango(inicio_clase, fin_clase, inicio_filtro, fin_filtro):
     return inicio_clase >= inicio_filtro and fin_clase <= fin_filtro
 
-def aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados):
+def aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados, tipo_seleccionado):
     df['Inicia'] = df['Inicia'].apply(convertir_hora)
     df['Fin'] = df['Fin'].apply(convertir_hora)
     
@@ -58,19 +61,22 @@ def aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados):
     
     df['Rango horas'] = df.apply(lambda row: 'Dentro del rango' if dentro_del_rango(row['Inicia'], row['Fin'], hora_inicio, hora_fin) else 'Fuera del rango', axis=1)
     df_filtrado = df[(df['Dia'].isin(dias_seleccionados)) & 
-                      (df.apply(lambda row: superposicion_horas(row['Inicia'], row['Fin'], hora_inicio, hora_fin), axis=1))]
+                     (df['Tipo'].isin(tipo_seleccionado)) & 
+                     (df.apply(lambda row: superposicion_horas(row['Inicia'], row['Fin'], hora_inicio, hora_fin), axis=1))]
     df_filtrado = df_filtrado.sort_values(by=['Rango horas'])
     df_filtrado['Curso y grupo'] = df_filtrado['Materia'] + ' - ' + df_filtrado['Grupo']
     return df_filtrado
 
-if df is not None:
+if df_cursos is not None:
     st.title("Filtro de Horarios")
     dias_seleccionados = st.multiselect("Selecciona los días", ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
     hora_inicio = st.slider("Hora de inicio", 7, 22)
     hora_fin = st.slider("Hora de fin", 7, 22)
+    
+    tipo_seleccionado = st.multiselect("Selecciona el tipo", ["Matemáticas", "Humanidades", "DCEE"], default=["Matemáticas", "Humanidades", "DCEE"])
 
     if st.button("Filtrar Horarios"):
-        df_resultado = aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados)
+        df_resultado = aplicar_filtro(df_cursos, hora_inicio, hora_fin, dias_seleccionados, tipo_seleccionado)
         
         # Guardar el resultado filtrado en el session_state
         st.session_state.df_filtrado = df_resultado
