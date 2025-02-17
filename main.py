@@ -32,7 +32,7 @@ if uploaded_file:
             df_etiquetas = pd.DataFrame()  # Si es CSV, no hay hojas adicionales
         
         # Verifica las columnas esperadas
-        expected_columns = ['Materia', 'Grupo', 'Docente', 'Dia', 'Inicia', 'Fin', 'Tipo']
+        expected_columns = ['Materia', 'Grupo', 'Docente', 'Correo', 'Dia', 'Inicia', 'Fin', 'Tipo']
         if not all(col in df_cursos.columns for col in expected_columns):
             st.error("El archivo cargado no tiene las columnas requeridas en la hoja de cursos. Por favor, sube el archivo con la plantilla adecuada.")
             df_cursos = None  # Reiniciar df para no permitir continuar
@@ -81,7 +81,6 @@ if df_cursos is not None:
         # Guardar el resultado filtrado en el session_state
         st.session_state.df_filtrado = df_resultado
 
-# Recuperar el dataframe filtrado desde el session_state si existe
 df_filtrado = st.session_state.get('df_filtrado', None)
 
 if df_filtrado is not None:
@@ -90,12 +89,13 @@ if df_filtrado is not None:
     df_copia['correo'] = False
     df_copia['Curso y grupo'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
     df_copia['Docente'] = df_copia['Docente']
+    df_copia['Correo'] = df_copia['Correo']
     df_copia['Rango horas'] = df_copia['Rango horas']
     df_copia['Día'] = df_copia['Dia']
     df_copia['Inicia'] = df_copia['Inicia']
     df_copia['Fin'] = df_copia['Fin']
 
-    df_copia = df_copia[['correo', 'Curso y grupo', 'Docente', 'Rango horas', 'Día', 'Inicia', 'Fin']]
+    df_copia = df_copia[['correo', 'Curso y grupo', 'Docente', 'Correo', 'Rango horas', 'Día', 'Inicia', 'Fin']]
 
     st.data_editor(
         df_copia,
@@ -111,17 +111,4 @@ if df_filtrado is not None:
     )
 
 seleccionados = df_copia[df_copia['correo'] == True]
-
-if not seleccionados.empty:
-    docentes = seleccionados['Docente'].tolist()
-
-    mensaje = st.text_area(
-        "Editar mensaje de invitación",
-        value="Estimados,\n\nNos gustaría invitar a sus estudiantes a participar en nuestro próximo evento. Esperamos contar con tu participación para hacer de este evento una experiencia enriquecedora.\n\nSaludos cordiales",
-        height=200
-    )
-
-    nombres = ", ".join(docentes)
-
-    st.text_area("Correos de los docentes seleccionados", value=nombres, height=100)
 
