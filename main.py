@@ -85,10 +85,21 @@ df_filtrado = st.session_state.get('df_filtrado', None)
 
 if df_filtrado is not None:
     df_copia = df_filtrado.copy()
+
     df_copia['correo'] = False
-    df_copia = df_copia[['correo', 'Materia', 'Grupo', 'Docente', 'Correo', 'Rango horas', 'Dia', 'Inicia', 'Fin']]
+    df_copia['Curso y grupo'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
+    df_copia['Docente'] = df_copia['Docente']
+    df_copia['Correo'] = df_copia['Correo']
+    df_copia['Rango horas'] = df_copia['Rango horas']
+    df_copia['Día'] = df_copia['Dia']
+    df_copia['Inicia'] = df_copia['Inicia']
+    df_copia['Fin'] = df_copia['Fin']
+
+    df_copia = df_copia[['correo', 'Curso y grupo', 'Docente', 'Correo', 'Rango horas', 'Día', 'Inicia', 'Fin']]
+
+    correos_guardados = df_copia.loc[df_copia['correo'], 'Correo'].tolist()
     
-    df_copia = st.data_editor(
+    st.data_editor(
         df_copia,
         column_config={
             "correo": st.column_config.CheckboxColumn(
@@ -97,17 +108,9 @@ if df_filtrado is not None:
                 default=False,
             )
         },
+        disabled=["widgets"],
         hide_index=True,
     )
     
-    # Botón para guardar correos seleccionados
-    if st.button("Guardar"):
-        correos_seleccionados = df_copia[df_copia['correo']]['Correo'].tolist()
-        st.session_state.correos_guardados = correos_seleccionados
-        st.success("Correos guardados correctamente")
-    
-    # Mostrar lista de correos guardados
-    correos_guardados = st.session_state.get("correos_guardados", [])
-    if correos_guardados:
-        st.subheader("Correos seleccionados:")
-        st.write("\n".join(correos_guardados))
+    if st.button("Guardar correos"):
+        st.text_area("Correos seleccionados", ", ".join(correos_guardados), height=100)
