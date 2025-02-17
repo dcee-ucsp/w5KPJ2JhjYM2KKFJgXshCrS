@@ -24,13 +24,11 @@ df = None
 
 if uploaded_file:
     try:
-        # Detectar el tipo de archivo y convertirlo en un DataFrame
         if uploaded_file.name.endswith(".xlsx"):
             df = pd.read_excel(uploaded_file)
         elif uploaded_file.name.endswith(".csv"):
             df = pd.read_csv(uploaded_file)
 
-        # Verificar si las columnas del archivo son las correctas
         expected_columns = ['Materia', 'Grupo', 'Docente', 'Dia', 'Inicia', 'Fin']
         if not all(col in df.columns for col in expected_columns):
             st.error("El archivo cargado no tiene las columnas requeridas. Por favor, sube el archivo con la plantilla adecuada.")
@@ -70,11 +68,34 @@ if df is not None:
 
     # Widgets para selección de horario
     dias_opciones = df["Dia"].unique().tolist()
-    dias_seleccionados = st.multiselect("Selecciona los días", dias_opciones)
-    hora_inicio = st.slider("Hora de inicio", 7, 22)
-    hora_fin = st.slider("Hora de fin", 7, 22)
+    dias_seleccionados = st.multiselect("Selecciona los días", dias_opciones, default=dias_opciones)
+    hora_inicio = st.slider("Hora de inicio", 0, 23, 8)
+    hora_fin = st.slider("Hora de fin", 0, 23, 18)
 
-    # Aplicar filtro y mostrar resultados
     if st.button("Filtrar Horarios"):
         df_resultado = aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados)
-        st.write(df_resultado)
+        df_copia = df_resultado.copy()
+
+        df_copia['correo'] = False
+        df_copia['Curso y grupo'] = df_copia['Materia'] + ' - ' + df_copia['Grupo']
+        df_copia['Docente'] = df_copia['Docente']
+        df_copia['Rango horas'] = df_copia['Rango horas']
+        df_copia['Día'] = df_copia['Dia']
+        df_copia['Inicia'] = df_copia['Inicia']
+        df_copia['Fin'] = df_copia['Fin']
+
+        df_copia = df_copia[['correo', 'Curso y grupo', 'Docente', 'Rango horas', 'Día', 'Inicia', 'Fin']]
+
+        # Mostrar el DataFrame utilizando st.data_editor
+        st.data_editor(
+            df_copia,
+            column_config={
+                "correo": st.column_config.CheckboxColumn(
+                    "Correo",
+                    help="Marcar quiere mandarle un correo",
+                    default=False,
+                )
+            },
+            disabled=["widgets"],
+            hide_index=True,
+        )
