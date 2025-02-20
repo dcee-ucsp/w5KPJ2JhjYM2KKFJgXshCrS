@@ -68,6 +68,7 @@ def aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados, tipo_seleccion
     return df_filtrado
 
 boton_desactivado = True
+guardar_desactivado = True
 
 if df_cursos is not None:
     st.title("Filtro de Horarios")
@@ -78,7 +79,8 @@ if df_cursos is not None:
     tipo_seleccionado = st.multiselect("Selecciona el tipo", ["Matemáticas", "Humanidades", "DCEE"], default=["DCEE"])
 
     boton_desactivado = not (hora_inicio and hora_fin and dias_seleccionados and tipo_seleccionado)
-    
+    guardar_desactivado = df_cursos is None  # El botón de guardar solo se habilita si hay datos cargados
+
 if st.button("Filtrar Horarios", disabled=boton_desactivado):
     df_resultado = aplicar_filtro(df_cursos, hora_inicio, hora_fin, dias_seleccionados, tipo_seleccionado)
     st.session_state.df_filtrado = df_resultado
@@ -101,13 +103,14 @@ if df_filtrado is not None:
         },
         hide_index=True,
     )
-    
-if st.button("Guardar"):
+
+if st.button("Guardar", disabled=guardar_desactivado):
     correos_seleccionados = df_copia[df_copia['correo']]['Correo'].tolist()    
     if "correos_guardados" not in st.session_state:
         st.session_state.correos_guardados = []
     
     st.session_state.correos_guardados = correos_seleccionados
+
 
 if "correos_guardados" in st.session_state and st.session_state.correos_guardados:
     st.subheader("Correos de cursos seleccionados")
