@@ -104,7 +104,7 @@ if df_filtrado is not None:
         hide_index=True,
     )
 
-if st.button("Guardar", disabled=guardar_desactivado):
+if st.button("Correos cursos seleccionados", disabled=guardar_desactivado):
     correos_seleccionados = df_copia[df_copia['correo']]['Correo'].tolist()    
     if "correos_guardados" not in st.session_state:
         st.session_state.correos_guardados = []
