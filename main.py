@@ -67,6 +67,8 @@ def aplicar_filtro(df, hora_inicio, hora_fin, dias_seleccionados, tipo_seleccion
     df_filtrado['Curso y grupo'] = df_filtrado['Materia'] + ' - ' + df_filtrado['Grupo']
     return df_filtrado
 
+boton_desactivado = True
+
 if df_cursos is not None:
     st.title("Filtro de Horarios")
     dias_seleccionados = st.multiselect("Selecciona los días", ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
@@ -75,7 +77,6 @@ if df_cursos is not None:
     
     tipo_seleccionado = st.multiselect("Selecciona el tipo", ["Matemáticas", "Humanidades", "DCEE"], default=["DCEE"])
 
-    
     boton_desactivado = not (hora_inicio and hora_fin and dias_seleccionados and tipo_seleccionado)
     
 if st.button("Filtrar Horarios", disabled=boton_desactivado):
